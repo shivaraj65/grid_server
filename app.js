@@ -1,4 +1,6 @@
 //jshint esversion:8
+require('dotenv').config();
+// process.env.DATABASE_URL
 const express=require('express');
 const http = require('http');
 const bodyParser = require('body-parser');
@@ -26,8 +28,8 @@ var corsOptions = {
 
 //-----------------configuration for the nodemail----------------------
 
-const userMail='shivaraj.feb@gmail.com';
-const passwordMail='ejiehbibxmmjbzwy';
+const userMail=process.env.EMAIL;
+const passwordMail=process.env.PASSWORD;
 
 //----setting up the host for sending the mail
 const mailTransporter = nodemailer.createTransport({
@@ -40,7 +42,7 @@ const mailTransporter = nodemailer.createTransport({
 });
 
 //--------------configuration for the mongoose model for the database------------------
-mongoose.connect('mongodb+srv://raj:TmVxxURECqEqRMQJ@cluster0.vsfo0.mongodb.net/easycharge');
+mongoose.connect(process.env.MONGODB_URL);
 // mongoose.set('useFindAndModify', false);
 
 //schema for the user
@@ -98,10 +100,10 @@ app.post('/signupW',async function(req,res){
   }
   if(response!==null){
     let message = {
-    from: 'atomifystudios@gmail.com',
+    from: process.env.EMAIL,
     to: req.body.Email,
-    subject: 'Welcome to Easy charge | Authentication',
-    html: "<!DOCTYPE html><html lang='en' dir='ltr'><head><meta charset='utf-8'><style media='screen'>.top-div {background-color: #1554f0;margin: 0 20px;border-radius: 10px;padding: 20px 10px;color: #fff;}.img {margin: 30px 0;text-align: center;width: 80%;}body {text-align: center;display:flex;}.font-1 {font-size: 1.6rem;}.font-2 {font-size: 1rem;padding-bottom:20px;}.hr {max-width: 30%;margin-top: 40px;margin-bottom: 40px;}.btn {padding: 10px 30px;border-radius: 5px;border: none;background-color: #fff;color: #1554f0;font-size: 1.3rem;font-weight: bolder;margin-top: 100px;text-decoration: none;} a {color: #000;}</style></head><body><table align='center' border='0' cellpadding='0' cellspacing='0'><tr><td align='center'><img class='img' src='https://media.istockphoto.com/vectors/welcome-background-with-colorful-confetti-vector-id843510116?k=20&m=843510116&s=170667a&w=0&h=KpENUYy_7mMO3QVyy9kW5PlWnPfRjD1a2qmXwygT4go=' alt='top banner'/><div class='top-div'><h1 class='font-1'>hi "+req.body.Name+"</h1><h2 class='font-1'>Welcome to Easy Charge</h2><p class='font-2'>thank you for joining with us!</p><h3 class='font-2'>Let's get started</h3><hr class='hr' /><p class='font-2'>You are one step away from getting Authenticated</p><p class='font-2'>click on the button below to activate your ACCOUNT.</p><a class='btn' href='http://localhost:3000/mailauth/"+req.body.Email+"'>VERIFY ACCOUNT</a></div><p class='font-2'>If the Button is not working. <a href='http://localhost:3000/mailauth/"+req.body.Email+"'>click here!</a></p><p class='font-2'>MADE WITH ❤️ IN INDIA</p></td></tr></table></body></html>"
+    subject: 'Welcome to THE-GRID | Authentication',
+    html: "<!DOCTYPE html><html lang='en' dir='ltr'><head><meta charset='utf-8'><style media='screen'>.top-div {background-color: #1554f0;margin: 0 20px;border-radius: 10px;padding: 20px 10px;color: #fff;}.img {margin: 30px 0;text-align: center;width: 80%;}body {text-align: center;display:flex;}.font-1 {font-size: 1.6rem;}.font-2 {font-size: 1rem;padding-bottom:20px;}.hr {max-width: 30%;margin-top: 40px;margin-bottom: 40px;}.btn {padding: 10px 30px;border-radius: 5px;border: none;background-color: #fff;color: #1554f0;font-size: 1.3rem;font-weight: bolder;margin-top: 100px;text-decoration: none;} a {color: #000;}</style></head><body><table align='center' border='0' cellpadding='0' cellspacing='0'><tr><td align='center'><img class='img' src='https://media.istockphoto.com/vectors/welcome-background-with-colorful-confetti-vector-id843510116?k=20&m=843510116&s=170667a&w=0&h=KpENUYy_7mMO3QVyy9kW5PlWnPfRjD1a2qmXwygT4go=' alt='top banner'/><div class='top-div'><h1 class='font-1'>hi "+req.body.Name+"</h1><h2 class='font-1'>Welcome to THE-GRID</h2><p class='font-2'>thank you for joining with us!</p><h3 class='font-2'>Let's get started</h3><hr class='hr' /><p class='font-2'>You are one step away from getting Authenticated</p><p class='font-2'>click on the button below to activate your ACCOUNT.</p><a class='btn' href='http://localhost:3000/mailauth/"+req.body.Email+"'>VERIFY ACCOUNT</a></div><p class='font-2'>If the Button is not working. <a href='http://localhost:3000/mailauth/"+req.body.Email+"'>click here!</a></p><p class='font-2'>MADE WITH ❤️ IN INDIA</p></td></tr></table></body></html>"
     };
     mailTransporter.sendMail(message, function(err, data) {
       if(err){
@@ -181,7 +183,7 @@ app.post('/totpSet',async function(req,res){
   let userData=await User.findById(req.body.Email).exec();
   if(req.body.toggle===true){
     //setting the totp
-    const secret = speakeasy.generateSecret({name:"Easy Charge | "+req.body.Email});
+    const secret = speakeasy.generateSecret({name:"THE-GRID | "+req.body.Email});
     let QR;
     QRCode.toDataURL(secret.otpauth_url, function(err, data_url) {
     QR=data_url;
@@ -248,55 +250,6 @@ app.post("/tokenVerify",function(req,res){
 
 });
 
-//route for the coinbase auth
-app.options('/coinbaseauth', cors());
-app.post('/coinbaseauth',async function(req,res){
-  const data={
-    _id:req.body.Email,
-    userID:'UID'+shortid.generate(),
-    authOrigin:'coinbase',
-    password:"NA",
-    name:req.body.Name,
-    verified:true,
-    tempSecret:'',
-    secret:'',
-    totpStatus:false
-  };
-  let checkUser=await User.exists({_id:req.body.Email});
-  let response=null;
-  if(checkUser===null){
-    response = await User.create(data);
-  }else{
-    res.send({status:'success',message:checkUser});
-  }
-  if(response!==null){
-    let message = {
-    from: 'atomifystudios@gmail.com',
-    to: req.body.Email,
-    subject: 'Welcome to Easy charge | Authentication',
-    html: "<!DOCTYPE html><html lang='en' dir='ltr'><head><meta charset='utf-8'><style media='screen'>.top-div {background-color: #1554f0;margin: 0 20px;border-radius: 10px;padding: 20px 10px;color: #fff;}.img {margin: 30px 0;text-align: center;width: 80%;}body {text-align: center;display:flex;}.font-1 {font-size: 1.6rem;}.font-2 {font-size: 1rem;padding-bottom:20px;}.hr {max-width: 30%;margin-top: 40px;margin-bottom: 40px;}.btn {padding: 10px 30px;border-radius: 5px;border: none;background-color: #fff;color: #1554f0;font-size: 1.3rem;font-weight: bolder;margin-top: 100px;text-decoration: none;} a {color: #000;}</style></head><body><table align='center' border='0' cellpadding='0' cellspacing='0'><tr><td align='center'><img class='img' src='https://media.istockphoto.com/vectors/welcome-background-with-colorful-confetti-vector-id843510116?k=20&m=843510116&s=170667a&w=0&h=KpENUYy_7mMO3QVyy9kW5PlWnPfRjD1a2qmXwygT4go=' alt='top banner'/><div class='top-div'><h1 class='font-1'>hi "+req.body.Name+"</h1><h2 class='font-1'>Welcome to Easy Charge</h2><p class='font-2'>thank you for joining with us!</p><h3 class='font-2'>Let's get started</h3><hr class='hr' /><p class='font-2'>Your Signup with COINBASE is verified.</p></div><p class='font-2'>MADE WITH ❤️ IN INDIA</p></td></tr></table></body></html>"
-    };
-    mailTransporter.sendMail(message, function(err, data) {
-      if(err){
-        res.send({status:'error',message:'mail not sent! contact supprt.'});
-      }else{
-        res.send({status:'success',message:'Email has been sent to verify your account. Please check your inbox to proceed'});
-      }
-    });
-  }
-});
-
-//route for coinabse login
-app.options('/logincoinbase', cors());
-app.post('/logincoinbase',async function(req,res){
-    let checkUser=await User.findById(req.body.Email).exec();
-    if(checkUser !==null){
-        res.send({status:'success',message:checkUser});
-    }else{
-        res.send({status:'error',message:"User Not exist! signup "});
-    }
-});
-
 //route for getting user Data
 app.options('/getuser', cors());
 app.post('/getuser',async function(req,res){
@@ -350,7 +303,6 @@ app.post('/getchargerz',async function(req,res){
   const docs=await Charger.find({ city: req.body.city }).exec();
   res.send({status:"success",message:docs});
 });
-
 
 //app listening port number
 app.listen(process.env.PORT || 3001, function(){
